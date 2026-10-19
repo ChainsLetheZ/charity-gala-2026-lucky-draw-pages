@@ -294,6 +294,45 @@ function renderHistory() {
   renderPrizePanel();
 }
 
+function winnerCsv() {
+  // Export every completed result in draw order, across all prize tiers.
+  const rows = [['序号', '姓名', '奖项', '奖品'], ...winners.map((name, index) => {
+    const prize = PRIZES.find(item => item.id === winnerPrizeByName[name]);
+    const info = participantMeta[name] || {};
+    return [index + 1, info.nameZh || info.name || name, prize?.tier || '待确认', prize?.name || ''];
+  })];
+  const cell = value => {
+    let text = String(value);
+    // Keep participant text as text when opened in a spreadsheet.
+    if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  };
+  return '\uFEFF' + rows.map(row => row.map(cell).join(',')).join('\r\n') + '\r\n';
+}
+
+function downloadWinners() {
+  if (!operatorPage) return;
+  if (!winners.length) {
+    showNotice('暂无获奖记录，完成开奖后可下载获奖名单。');
+    return;
+  }
+  const blob = new Blob([winnerCsv()], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const now = new Date();
+  const pad = value => String(value).padStart(2, '0');
+  const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  link.href = url;
+  link.download = `慈善晚会2026-获奖名单-${stamp}.csv`;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+if (operatorPage) document.querySelector('#downloadWinners')?.addEventListener('click', downloadWinners);
+
 function currentPrize() { return PRIZES.find(prize => prize.id === currentPrizeId) || PRIZES[0]; }
 
 function receivePrize(id, announce = false) {
@@ -1096,7 +1135,7 @@ document.querySelector('#closeWinner')?.remove();
 
 addEventListener('keydown', e => {
   if (operatorReplaced) return;
-  if (e.target?.matches?.('input,textarea,select,[contenteditable="true"]')) return;
+  if (e.target?.matches?.('input,textarea,select,button,a[href],[contenteditable="true"]')) return;
   if (e.code === 'KeyM') {
     if (!operatorPage) return;
     if (e.repeat) return;
