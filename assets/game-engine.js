@@ -35,7 +35,7 @@ const prizeImages = PRIZES.map(prize => {
 });
 let currentPrizeId = localStorage.getItem('charity-gala-current-prize') || PRIZES[0].id;
 if (!PRIZES.some(prize => prize.id === currentPrizeId)) currentPrizeId = PRIZES[0].id;
-// Confirmed batch sizes from 抽奖名单 1.xlsx, sheet 抽奖批次.
+// Confirmed batch sizes from 抽奖名单 2.xlsx, sheet 抽奖批次.
 const BATCH_PLAN = { first: [7, 8], second: [10, 10], third: [10, 10, 10] };
 const redBall = new Image();
 redBall.src = 'assets/charity-gala-ball-red-1254.png';
